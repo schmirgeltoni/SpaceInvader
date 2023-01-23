@@ -1,0 +1,4 @@
+﻿[*.{cs,vb}]
+
+# IDE0040: Zugriffsmodifizierer hinzufügen
+dotnet_diagnostic.IDE0040.severity = warning
