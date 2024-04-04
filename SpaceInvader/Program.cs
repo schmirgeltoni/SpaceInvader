@@ -9,7 +9,7 @@ namespace SpaceInvader //x und y sind vertauscht
         {
             CursorVisible = false;
 
-            Display.DisplayTitleScreen(); 
+            //Display.DisplayTitleScreen(); 
             //Thread.Sleep(3000); //3 Sekunden sleepen, damit nicht direkt nach dem TitleScreen etwas ausgewählt wird
             ClearKeyBuffer();
             
