@@ -19,7 +19,7 @@ Welcome to my Space Invaders Console Game remake! This is a simple project letti
 Download the repo and execute the project yourself
 
 ## Screenshots
-![alt text](screenshot.png "Gameplay")
+![alt text](gameplay.png "Gameplay")
 ![alt text](menu.png "Menu")
 
 ## Contributing
