@@ -63,6 +63,7 @@ namespace SpaceInvader
     {
         public Barrier(int GameProgress) : base('█', DarkGray, GameProgress) { }
         public Barrier(char Icon, ConsoleColor Color, int GameProgress) : base(Icon, Color, GameProgress) { }
+        public Barrier(char Icon) : base(Icon, DarkGray, 0) { }
     }
     public class Space : Entity
     {
@@ -92,6 +93,18 @@ namespace SpaceInvader
                 Icon = '░';           
         }
     }
+    public class DestructableMeteor : DestructableBarrier
+    {
+        public bool Move { get; set; }
+
+        public DestructableMeteor(int GameProgress, int Health) : base(GameProgress, Health)
+        {
+            Icon = '*';
+            Color = Blue;
+            //this.Health = Health;
+            Move = false;
+        }
+    }
     public class Meteor : Barrier
     {
         public bool Move { get; set; }
@@ -99,20 +112,6 @@ namespace SpaceInvader
         {
             Icon = '*';
             Color = White;
-            Move = false;
-        }
-    }
-    public class DestructableMeteor : DestructableBarrier
-    {
-        public bool Move { get; set; }
-#pragma warning disable CS0108 // Element blendet vererbte Element aus; fehlendes 'new'-Schlüsselwort
-        public int Health { set; get; }
-#pragma warning restore CS0108 // Element blendet vererbte Element aus; fehlendes 'new'-Schlüsselwort
-        public DestructableMeteor(int GameProgress, int Health) : base(GameProgress, Health)
-        {
-            Icon = '*';
-            Color = Blue;
-            this.Health = Health;
             Move = false;
         }
     }
@@ -125,7 +124,7 @@ namespace SpaceInvader
         public AimBarrier(int GameProgress) : base(GameProgress)
         {            
             Color = Yellow;
-            Icon = '█';
+            Icon = '═';
         }
     }
     public class Text : Barrier

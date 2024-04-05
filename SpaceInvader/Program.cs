@@ -3,6 +3,7 @@ using static System.ConsoleColor;
 
 namespace SpaceInvader //x und y sind vertauscht
 {
+
     internal class Program
     {
         private static void Main()
