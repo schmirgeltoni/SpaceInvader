@@ -8,7 +8,8 @@ namespace SpaceInvader
     {
         public int Cooldown { get; set; }
         public int MaxCooldown { get; set; }
-        public int Uses { get; set; }
+        public int Ammo { get; set; }
+        public int MaxAmmo { get; set; }
         public WeaponType Type { get; set; }
         public bool Toggle { get; set; }
         public Weapon(WeaponType Type)
@@ -17,31 +18,38 @@ namespace SpaceInvader
             if (Type == WeaponType.Laser)
             {
                 MaxCooldown = 25;
-                Uses = 10;
+                MaxAmmo = 10;
+                Ammo = MaxAmmo;
             }
             else if (Type == WeaponType.Rocket)
             {
                 MaxCooldown = 8;
-                Uses = 15;
+                MaxAmmo = 15;
+                Ammo = MaxAmmo;
             }
             else if (Type == WeaponType.Minigun)    
             {
-                Uses = 100;
+                MaxAmmo = 100;
+                Ammo = MaxAmmo;
                 Toggle = false;
             }
             else if (Type == WeaponType.Standard)
             {
                 MaxCooldown = 5;
+                //prevent DivideByZero
+                MaxAmmo = 1;
             }
             Cooldown = MaxCooldown;
         }
-        public Weapon(WeaponType Type, int Uses, int MaxCooldown, int Cooldown)
+        public Weapon(WeaponType Type, int Ammo, int MaxCooldown, int Cooldown, int MaxAmmo)
         {
             this.Type= Type;
-            this.Uses = Uses;
+            this.Ammo = Ammo;
             this.MaxCooldown = MaxCooldown;
             this.Cooldown = Cooldown;
+            this.MaxAmmo = MaxAmmo;
             Toggle = false;
         }
+        public bool IsAmmoFull() => MaxAmmo == Ammo;
     }
 }
