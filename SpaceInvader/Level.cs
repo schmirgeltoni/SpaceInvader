@@ -589,11 +589,11 @@ namespace SpaceInvader
                                 Field[i + 1, j] = _Space;
                             }
                         }
-                        //horizontal movement
-                        else if (TemporaryEnemy.LifeTime > 20)
+                        //horizontal movement and firing
+                        if (TemporaryEnemy.LifeTime > 20)
                         {
-                            //decide if enemy goes left or right
-                            int move = Random.Next(2);
+                            //decide if enemy goes left, right or shoots
+                            int move = Random.Next(3);
                             //go left if there is no barrier or other enemy
                             if (move == 0 && Field[i, j - 1] is not Barrier && Field[i, j - 1] is not Enemy)
                             {
@@ -607,7 +607,7 @@ namespace SpaceInvader
                                 Field[i, j] = _Space;
                             }
                             //if he can not go left or right, just shoot
-                            else if (Field[i + 1, j] is not Enemy && Field[i + 1, j] is not Barrier)
+                            else if (move == 2)
                             {
                                 if (Field[i + 1, j] is Player)
                                 {
@@ -617,6 +617,7 @@ namespace SpaceInvader
                                 {
                                     Field[i + 1, j] = new EnemyProjectile(GameProgress);
                                 }
+                                
                             }
                         }
                     }
@@ -879,10 +880,10 @@ namespace SpaceInvader
         {
             /*
             modulo can work if score is only increased by 100, but more enemy types giving different score will mess this up inevitably
-            Score += 100;
             if (Score % 1000 == 0)
                 EnemySpawnrate -= 10;
             */
+            Score += 100;
             if (Score < 1000)
                 EnemySpawnrate = 100;
             else if (Score >= 1000 && Score < 2000)

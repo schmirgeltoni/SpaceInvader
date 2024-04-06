@@ -8,10 +8,10 @@ namespace TestSpaceGame
         static void Main()
         {
             Console.OutputEncoding = Encoding.Unicode;
-            for (int i = 0x2550; i <= 0x256C;  i++)
-            {
-            Console.WriteLine(Convert.ToChar(i));
-            }
+            Console.WriteLine((char)2661);
+            Console.WriteLine((char)2665);
+            Console.WriteLine((char)2764);
+
         }
         
     }
