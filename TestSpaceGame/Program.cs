@@ -3,14 +3,11 @@ using System.Text;
 
 namespace TestSpaceGame
 {
-    class Program
+    public class Program
     {
-        static void Main()
+        public static void Main()
         {
-            Console.OutputEncoding = Encoding.Unicode;
-            Console.WriteLine((char)2661);
-            Console.WriteLine((char)2665);
-            Console.WriteLine((char)2764);
+            Console.WriteLine("\u263A \u2665 \u262F");
 
         }
         

@@ -96,6 +96,11 @@ namespace SpaceInvader
             Field[FieldLengthX - 1, FieldLengthY - 1] = new Barrier('╝');
 
             Field[PlayerLocationY, PlayerLocationX] = new Player(GameProgress);
+
+            //These are for Test purposes
+            //Field[1, FieldLengthX / 2] = new Turret(GameProgress, 0, 5, 0, 2);
+            //Field[PlayerLocationY - 3, PlayerLocationY - 3] = new Enemy(GameProgress, 0);
+            //Field[PlayerLocationY - 6, PlayerLocationY - 3] = new Meteor(GameProgress);
         }
         public void LevelProgress(ConsoleKey consoleKey) //i = y (vertical), j = x (horizontal)
         {
@@ -112,7 +117,7 @@ namespace SpaceInvader
             {
                 for (int j = 0; j < Field.GetLength(1); j++)
                 {
-                    #region Player  TODO: Upgrades durch reinfahren collecten
+                    #region Player
                     if (Field[i, j] is Player && Field[i, j].GameProgress != GameProgress)
                     {
                         //AimBarrier at (0, PlayerPositon)
@@ -125,8 +130,16 @@ namespace SpaceInvader
                         //Minigun shot (automatic)
                         if (PlayerWeapon.Type == WeaponType.Minigun && PlayerWeapon.Toggle && Field[i - 1, j] is not Barrier) 
                         {
-                            Field[i - 1, j] = new FriendlyProjectile(GameProgress);
-                            PlayerWeapon.Ammo--;
+                            if (PlayerWeapon.MiniGunRateOfFire >= 2)
+                            {
+                                Field[i - 1, j] = new FriendlyProjectile(GameProgress);
+                                PlayerWeapon.MiniGunRateOfFire = 0;
+                                PlayerWeapon.Ammo--;
+                            }
+                            else
+                            {
+                                PlayerWeapon.MiniGunRateOfFire++;
+                            }
                         }
                         //remove health of destructable barriers/meteors if they're in front of the player and they shoot
                         if (consoleKey == ConsoleKey.Spacebar && Field[i - 1, j] is DestructableMeteor TemporaryDestructableMeteor1)
@@ -137,31 +150,35 @@ namespace SpaceInvader
                         {
                             TemporaryDestructableBarrier.Health--;
                         }
+                        //player shoots
                         else if (consoleKey == ConsoleKey.Spacebar && Field[i - 1, j] is not Barrier)
                         {
-                            //spawn projectile
-                            if (PlayerWeapon.Type == WeaponType.Standard && PlayerWeapon.Cooldown >= PlayerWeapon.MaxCooldown)
+                            if (PlayerWeapon.Cooldown >= PlayerWeapon.MaxCooldown)
                             {
-                                PlayerWeapon.Cooldown = 0;
-                                Field[i - 1, j] = new FriendlyProjectile(GameProgress);
-                            }
-                            else if (PlayerWeapon.Type == WeaponType.Rocket && PlayerWeapon.Cooldown >= PlayerWeapon.MaxCooldown)
-                            {
-                                PlayerWeapon.Cooldown = 0;
-                                PlayerWeapon.Ammo--;
-                                Field[i - 1, j] = new Rocket(GameProgress);
-                            }
-                            else if (PlayerWeapon.Type == WeaponType.Laser && PlayerWeapon.Cooldown >= PlayerWeapon.MaxCooldown)
-                            {
-                                PlayerWeapon.Cooldown = 0;
-                                PlayerWeapon.Ammo--;
-                                for (int k = i - 1; Field[k, j] is not Barrier; k--)
+                                //spawn projectile
+                                if (PlayerWeapon.Type == WeaponType.Standard)
                                 {
-                                    if (Field[k, j] is Enemy)
-                                        Kill();
-                                    if (Field[k, j] is Upgrade TemporaryUpgrade)
-                                        PlayerWeapon = new Weapon(TemporaryUpgrade.UpgradeType);
-                                    Field[k, j] = new Laser(0);
+                                    PlayerWeapon.Cooldown = 0;
+                                    Field[i - 1, j] = new FriendlyProjectile(GameProgress);
+                                }
+                                else if (PlayerWeapon.Type == WeaponType.Rocket)
+                                {
+                                    PlayerWeapon.Cooldown = 0;
+                                    PlayerWeapon.Ammo--;
+                                    Field[i - 1, j] = new Rocket(GameProgress);
+                                }
+                                else if (PlayerWeapon.Type == WeaponType.Laser)
+                                {
+                                    PlayerWeapon.Cooldown = 0;
+                                    PlayerWeapon.Ammo--;
+                                    for (int k = i - 1; Field[k, j] is not Barrier; k--)
+                                    {
+                                        if (Field[k, j] is Enemy)
+                                            Kill();
+                                        if (Field[k, j] is Upgrade TemporaryUpgrade)
+                                            PlayerWeapon = new Weapon(TemporaryUpgrade.UpgradeType);
+                                        Field[k, j] = new Laser(0);
+                                    }
                                 }
                             }
                         }
@@ -317,9 +334,9 @@ namespace SpaceInvader
                         }
                         else if (Field[i - 1, j] is EnemyProjectile) 
                         {
-                            //delete both projectiles and create an explosion
-                            Field[i, j] = _Space;  
-                            Field[i - 1, j] = new Explosion(); 
+                            //delete both projectiles
+                            Field[i, j] = _Space;
+                            Field[i - 1, j] = _Space;
                         }
                         else if (Field[i - 1, j] is Enemy)
                         {
@@ -332,10 +349,17 @@ namespace SpaceInvader
                         {   
                             //reduce hp and check for destruction
                             TemporaryDestructableMeteor2.Health--;
+
                             if (TemporaryDestructableMeteor2.Health <= 0)
                             {
                                 Field[i, j] = new Explosion();
                             }
+                            else
+                            {
+                                //Field[i - 1, j] = new DestructableMeteor(GameProgress, TemporaryDestructableMeteor2.Health);
+                            }
+                            Field[i, j] = _Space;
+                            
                         }
                         else if (Field[i - 1, j] is Upgrade TemporaryUpgrade)
                         {
@@ -365,40 +389,72 @@ namespace SpaceInvader
                     #region Meteor
                     else if (Field[i, j] is Meteor TemporaryMeteor && Field[i, j].GameProgress != GameProgress && Field[i + 1, j] is not Barrier)
                     {
-                        //space below meteor
-                        if (Field[i + 1, j] is Space && TemporaryMeteor.Move)
+                        if (TemporaryMeteor.LifeTime >= 5)
                         {
-                            //delete old
-                            Field[i, j] = _Space;
-                            Field[i + 1, j] = new Meteor(GameProgress);
-                        }
-                        else if (Field[i + 1, j] is Rocket && TemporaryMeteor.Move)
-                        {
-                            MakeExplosion(i + 1, j, 1);
-                        }
-                        else if (Field[i + 1, j] is FriendlyProjectile && TemporaryMeteor.Move)
-                        {   
-                            //projectile gets deleted since meteor is undestructable
-                            Field[i, j] = _Space;
-                            Field[i + 1, j] = new Meteor(GameProgress);
-                        }
-                        else if (Field[i + 1, j] is Player && TemporaryMeteor.Move)
-                        {
+                            //space below meteor
+                            if (Field[i + 1, j] is Space)
+                            {
+                                //delete old
+                                Field[i, j] = _Space;
+                                Field[i + 1, j] = new Meteor(GameProgress);
+                            }
+                            else if (Field[i + 1, j] is Enemy TempEnemy)
+                            {
+                                //enemies have a 2/3 chance to dodge meteors, so they don't die as fast
+                                int Dodge = Random.Next(6);
+                                if (Dodge > 1) 
+                                { 
+                                    //check if nothing is to the right + 50% chance for each direction
+                                    if (Field[i + 1, j + 1] is Space && Dodge > 2)
+                                    {
+                                        Field[i + 1, j + 1] = new Enemy(GameProgress, TempEnemy.LifeTimeForVerticalMovement, TempEnemy.LifeTimeForShooting);
+                                        Field[i + 1, j] = new Meteor(GameProgress);
+                                        Field[i, j] = _Space;
+                                    }
+                                    //check if nothing is to the left
+                                    else if (Field[i + 1, j - 1] is Space && Dodge <= 2)
+                                    {
+                                        Field[i + 1, j - 1] = new Enemy(GameProgress, TempEnemy.LifeTimeForVerticalMovement, TempEnemy.LifeTimeForShooting);
+                                        Field[i + 1, j] = new Meteor(GameProgress);
+                                        Field[i, j] = _Space;
+                                    }
+                                    else
+                                    {
+                                        //if enemey can't dodge, he just dies
+                                        Field[i + 1, j] = new Meteor(GameProgress);
+                                        Field[i, j] = _Space;
+                                    }
 
-                            Field[i, j] = _Space;
-                            PlayerLifes--;
+                                }
+                            }
+                            else if (Field[i + 1, j] is Rocket)
+                            {
+                                MakeExplosion(i + 1, j, 1);
+                            }
+                            else if (Field[i + 1, j] is FriendlyProjectile)
+                            {   
+                                //projectile gets deleted since meteor is undestructable
+                                Field[i, j] = _Space;
+                                Field[i + 1, j] = new Meteor(GameProgress);
+                            }
+                            else if (Field[i + 1, j] is Player )
+                            {
+
+                                Field[i, j] = _Space;
+                                PlayerLifes--;
+                            }
+                            else if (Field[i + 1, j] is DestructableBarrier TemporaryDestructableBarrier)
+                            {
+                                Field[i, j] = _Space;
+                                //test if this will work
+                                //TemporaryDestructableBarrier.Health--;
+                                Field[i + 1, j] = new DestructableBarrier(GameProgress, TemporaryDestructableBarrier.Health - 1);
+                            }
                         }
-                        else if (Field[i + 1, j] is DestructableBarrier TemporaryDestructableBarrier && TemporaryMeteor.Move)
+                        else if (TemporaryMeteor.LifeTime < 5)
                         {
-                            Field[i, j] = _Space;
-                            //test if this will work
-                            //TemporaryDestructableBarrier.Health--;
-                            Field[i + 1, j] = new DestructableBarrier(GameProgress, TemporaryDestructableBarrier.Health - 1);
-                        }
-                        else if (!TemporaryMeteor.Move)
-                        {
-                            //meteor moves every other tick, rework implementation with int for adjustable speeds
-                            TemporaryMeteor.Move = true;
+                            //meteor moves slowly
+                            TemporaryMeteor.LifeTime++;
                         }
                     }
                     else if (Field[i, j] is Meteor && Field[i, j].GameProgress != GameProgress && Field[i + 1, j] is Barrier)
@@ -416,33 +472,36 @@ namespace SpaceInvader
                             //destr. meteor can only be destroyed by projectiles => explosion instead of space
                             Field[i, j] = new Explosion();
                         }
-                        else if (Field[i + 1, j] is Space && TemporaryDestructableMeteor.Move)
+                        if ( TemporaryDestructableMeteor.LifeTime >= 5)
                         {
-                            Field[i, j] = _Space;
-                            Field[i + 1, j] = new DestructableMeteor(GameProgress, TemporaryDestructableMeteor.Health);
+                            if (Field[i + 1, j] is Space)
+                            {
+                                Field[i, j] = _Space;
+                                Field[i + 1, j] = new DestructableMeteor(GameProgress, TemporaryDestructableMeteor.Health);
+                            }
+                            else if (Field[i + 1, j] is Rocket)
+                            {
+                                MakeExplosion(i + 1, j , 1);
+                            }
+                            else if (Field[i + 1, j] is FriendlyProjectile)
+                            {
+                                Field[i, j] = _Space;
+                                Field[i + 1, j] = new DestructableMeteor(GameProgress, TemporaryDestructableMeteor.Health - 1);
+                            }
+                            else if (Field[i + 1, j] is Player)
+                            {
+                                Field[i, j] = _Space;
+                                PlayerLifes--;
+                            }
+                            else if (Field[i + 1, j] is DestructableBarrier TemporaryDestructableBarrier)
+                            {
+                                Field[i, j] = _Space;
+                                Field[i + 1, j] = new DestructableBarrier(GameProgress, TemporaryDestructableBarrier.Health - 1);
+                            }
                         }
-                        else if (Field[i + 1, j] is Rocket && TemporaryDestructableMeteor.Move)
+                        else if (TemporaryDestructableMeteor.LifeTime < 5)
                         {
-                            MakeExplosion(i + 1, j , 1);
-                        }
-                        else if (Field[i + 1, j] is FriendlyProjectile && TemporaryDestructableMeteor.Move)
-                        {
-                            Field[i, j] = _Space;
-                            Field[i + 1, j] = new DestructableMeteor(GameProgress, TemporaryDestructableMeteor.Health - 1);
-                        }
-                        else if (Field[i + 1, j] is Player && TemporaryDestructableMeteor.Move)
-                        {
-                            Field[i, j] = _Space;
-                            PlayerLifes--;
-                        }
-                        else if (Field[i + 1, j] is DestructableBarrier TemporaryDestructableBarrier && TemporaryDestructableMeteor.Move)
-                        {
-                            Field[i, j] = _Space;
-                            Field[i + 1, j] = new DestructableBarrier(GameProgress, TemporaryDestructableBarrier.Health - 1);
-                        }
-                        else if (!TemporaryDestructableMeteor.Move)
-                        {
-                            TemporaryDestructableMeteor.Move = true;
+                            TemporaryDestructableMeteor.LifeTime++;
                         }
                     }
                     else if (Field[i, j] is DestructableMeteor && Field[i, j].GameProgress != GameProgress && Field[i + 1, j] is Barrier)
@@ -460,15 +519,20 @@ namespace SpaceInvader
                             Field[i, j] = _Space;
                             Field[i + 1, j] = new EnemyProjectile(GameProgress);
                         }
+                        else if (Field[i + 1, j] is Enemy)
+                        {
+                            Field[i,j] = _Space;
+                            Field[i + 2, j] = new EnemyProjectile(GameProgress);
+                        }
                         else if (Field[i + 1, j] is Rocket)
                         {
                             //projectiles collide
                             MakeExplosion(i + 1, j, 1);
                         }
-                        else if (Field[i + 1, j] is FriendlyProjectile || Field[i + 1, j] is Enemy)
+                        else if (Field[i + 1, j] is FriendlyProjectile)
                         {
                             Field[i, j] = _Space;
-                            Field[i + 1, j] = new Explosion();
+                            Field[i + 1, j] = _Space;
                         }
                         else if (Field[i + 1, j] is Player)
                         {
@@ -551,7 +615,91 @@ namespace SpaceInvader
                     }
                     else if (Field[i, j] is Upgrade && Field[i, j].GameProgress != GameProgress && Field[i + 1, j] is Barrier)
                     {
-                        Field[i, j] = _Space;                   
+                        Field[i, j] = _Space;
+                    }
+                    #endregion
+
+                    #region Turret
+                    else if (Field[i, j] is Turret TempTurret && Field[i, j].GameProgress != GameProgress)
+                    {
+                        //Turrets shoot a certain amount of times before relocating
+                        //currently they shoot just a little slower than player standard weapon
+                        if (TempTurret.ShotsFired < TempTurret.ShotsFiredBeforeMovement)
+                        {
+                            if (TempTurret.LifeTimeForShooting > 6)
+                            {
+                                //if an enemy blocks the direct space in front, just spawn the projectile beneath the other enemy
+                                if (Field[i + 1, j] is Enemy)
+                                {
+                                    Field[i + 2, j] = new EnemyProjectile(GameProgress);
+                                    TempTurret.ShotsFired++;
+                                }
+                                else
+                                {
+                                    Field[i + 1, j] = new EnemyProjectile(GameProgress);
+                                    TempTurret.ShotsFired++;
+                                }
+                                TempTurret.LifeTimeForShooting = 0;
+                            }
+                            else
+                            {
+                                TempTurret.LifeTimeForShooting++;
+                            }
+                        }
+                        //turret relocates
+                        else
+                        {
+                            //if it's zero the turret hasn't moved yet. therefore the direction can be decided
+                            if (TempTurret.TilesMoved == 0)
+                            {
+                                TempTurret.Direction = Random.Next(2);
+                                //left
+                                if (TempTurret.Direction == 0)
+                                {
+                                    if ((Field[i, j - 1] is Space || Field[i, j - 1] is not Enemy) && Field[i, j - 1] is not Barrier)
+                                    {
+                                        Field[i, j - 1] = new Turret(GameProgress, TempTurret.ShotsFired, TempTurret.AmountOfTilesToMove, TempTurret.TilesMoved + 1, 0);
+                                        Field[i, j] = _Space;
+                                    }
+                                }
+                                //right
+                                else
+                                {
+                                    if ((Field[i, j + 1] is Space || Field[i, j + 1] is not Enemy) && Field[i, j + 1] is not Barrier)
+                                    {
+                                        Field[i, j + 1] = new Turret(GameProgress, TempTurret.ShotsFired, TempTurret.AmountOfTilesToMove, TempTurret.TilesMoved + 1, 1);
+                                        Field[i, j] = _Space;
+                                    }
+                                }
+                            }
+                            //turret moves as much as it should
+                            else if (TempTurret.TilesMoved < TempTurret.AmountOfTilesToMove)
+                            {
+                                if (TempTurret.Direction == 0)
+                                {
+                                    if ((Field[i, j - 1] is Space || Field[i, j - 1] is not Enemy) && Field[i, j - 1] is not Barrier)
+                                    {
+                                        Field[i, j - 1] = new Turret(GameProgress, TempTurret.ShotsFired, TempTurret.AmountOfTilesToMove, TempTurret.TilesMoved + 1, 0);
+                                        Field[i, j] = _Space;
+                                    }
+                                }
+                                else
+                                {
+                                    if ((Field[i, j + 1] is Space || Field[i, j + 1] is not Enemy) && Field[i, j + 1] is not Barrier)
+                                    {
+                                        Field[i, j + 1] = new Turret(GameProgress, TempTurret.ShotsFired, TempTurret.AmountOfTilesToMove, TempTurret.TilesMoved + 1, 1);
+                                        Field[i, j] = _Space;
+                                    }
+                                }
+                            }
+                            //these get reset so it shoots instead of moves
+                            else
+                            {
+                                TempTurret.ShotsFired = 0;
+                                TempTurret.TilesMoved = 0;
+                            }
+                        }
+
                     }
                     #endregion
 
@@ -560,9 +708,8 @@ namespace SpaceInvader
                     {
                         //for random enemy spawn
                         EnemyExists = true;
-                        TemporaryEnemy.LifeTime++;
-                        
-                        //enemies move down very slow
+                        TemporaryEnemy.LifeTimeForHorizontalMovement++;
+                        TemporaryEnemy.LifeTimeForShooting++;
                         TemporaryEnemy.LifeTimeForVerticalMovement++;
                         //vertical movement
                         if (TemporaryEnemy.LifeTimeForVerticalMovement > 67)
@@ -571,9 +718,14 @@ namespace SpaceInvader
                             if (Field[i + 1, j] is Space || Field[i + 1, j] is Upgrade)
                             {
                                 Field[i, j] = _Space;
-                                Field[i + 1, j] = new Enemy(GameProgress);
+                                Field[i + 1, j] = new Enemy(GameProgress, TemporaryEnemy.LifeTimeForShooting);
                             }
-                            else if (Field[i + 1, j] is Player || Field[i + 1, j] is Barrier)
+                            else if (Field[i + 1, j] is Barrier || i == FieldLengthY - 2)
+                            {
+                                //enemy reached the bottom of the field, therefore instant lose
+                                PlayerLifes = 0;
+                            }
+                            else if (Field[i + 1, j] is Player)
                             {
                                 PlayerLifes--;
                                 Kill();
@@ -581,33 +733,66 @@ namespace SpaceInvader
                             }
                             else if (Field[i + 1, j] is Rocket)
                             {
+                                Kill();
                                 MakeExplosion(i + 1, j, 1);
                             }
                             else if (Field[i + 1, j] is FriendlyProjectile)
                             {
+                                Kill();
                                 Field[i, j] = new Explosion();
                                 Field[i + 1, j] = _Space;
                             }
                         }
-                        //horizontal movement and firing
-                        if (TemporaryEnemy.LifeTime > 20)
+                        //horizontal movement
+                        //IMPORTANT: if enemies shoot more than they move, weird behaviour can arrise i.e. doubleshots
+                        //making it the opposite SEEMS to negate this
+                        if (TemporaryEnemy.LifeTimeForHorizontalMovement > 29)
                         {
-                            //decide if enemy goes left, right or shoots
-                            int move = Random.Next(3);
+                            //decide if enemy goes left or right
+                            int move = Random.Next(2);
                             //go left if there is no barrier or other enemy
                             if (move == 0 && Field[i, j - 1] is not Barrier && Field[i, j - 1] is not Enemy)
                             {
-                                Field[i, j - 1] = new Enemy(GameProgress, TemporaryEnemy.LifeTimeForVerticalMovement);
+                                if (Field[i, j - 1] is Player)
+                                {   
+                                    //enemy flies into player
+                                    Kill();
+                                }
+                                else
+                                {
+                                    if (Field[i, j - 1] is EnemyProjectile)
+                                    {
+                                        Field[i + 1, j - 1] = new EnemyProjectile(GameProgress);
+                                    }
+                                    Field[i, j - 1] = new Enemy(GameProgress, TemporaryEnemy.LifeTimeForVerticalMovement, 0);
+                                }
+                                //old position gets removed either way
                                 Field[i, j] = _Space;
                             }
                             //go right if there is no barrier or other enemy
                             else if (move == 1 && Field[i, j + 1] is not Barrier && Field[i, j + 1] is not Enemy)
                             {
-                                Field[i, j + 1] = new Enemy(GameProgress, TemporaryEnemy.LifeTimeForVerticalMovement);
+                                if (Field[i, j + 1] is Player)
+                                {
+                                    //enemy flies into player
+                                    Kill();
+                                }
+                                else
+                                {
+                                    if (Field[i, j + 1] is EnemyProjectile)
+                                    {
+                                        Field[i + 1, j + 1] = new EnemyProjectile(GameProgress);
+                                    }
+                                    Field[i, j + 1] = new Enemy(GameProgress, TemporaryEnemy.LifeTimeForVerticalMovement, 0);
+                                }
+                                //old position gets removed either way
                                 Field[i, j] = _Space;
                             }
-                            //if he can not go left or right, just shoot
-                            else if (move == 2)
+                            
+                        }
+                        if (TemporaryEnemy.LifeTimeForShooting > 23 )
+                        {
+                            if (Field[i + 1, j] is not Barrier)
                             {
                                 if (Field[i + 1, j] is Player)
                                 {
@@ -617,8 +802,17 @@ namespace SpaceInvader
                                 {
                                     Field[i + 1, j] = new EnemyProjectile(GameProgress);
                                 }
-                                
                             }
+                            else if (Field[i + 1, j] is Enemy)
+                            {
+                                Field[i + 2, j] = new EnemyProjectile(GameProgress);
+                            }
+                            //if enemy shoots while at the lowest point of the playing field, the player loses
+                            else if (Field[i + 1, j] is Barrier && i == FieldLengthY - 2)
+                            {
+                                PlayerLifes = 0;
+                            }
+                            TemporaryEnemy.LifeTimeForShooting = 0;
                         }
                     }
                     #endregion
@@ -636,6 +830,15 @@ namespace SpaceInvader
                 }
             }
         }
+        public bool IsEnemyBelow(int i, int j)
+        {
+            for (int i2 = i; Field[j, i2] is not Barrier; i2++)
+            {
+                if (Field[j, i2] is Enemy)
+                    return true;
+            }
+            return false;
+        }
         public void RandomEnemySpawn() //spawn function is seperate from game update
         {
             EnemySpawnCounter++;
@@ -651,7 +854,7 @@ namespace SpaceInvader
                     //if there is space, create enemy
                     if (Field[EnemyLocationY, RandomSpawn] is Space)
                     {
-                        Field[EnemyLocationY, RandomSpawn] = new Enemy(GameProgress);
+                        Field[EnemyLocationY, RandomSpawn] = new Enemy(GameProgress, 0);
                         EnemyNotSpawned = false;
                     }
                 }
@@ -734,9 +937,10 @@ namespace SpaceInvader
         public void PrintLifesAndScore()
         {
             ForegroundColor = Green;
-            Write($"Lifes: {PlayerLifes}");
+            //one heart for each life
+            Write($"Lifes: {new string('\u2665', PlayerLifes)}");
             //calculates padding for smooth UI
-            int AmountOfPadding = FieldLengthX - 14 /* 7 characters for "Lifes: " and 7 for "Score: " => 14 */ - Convert.ToString(PlayerLifes).Length - Convert.ToString(Score).Length;
+            int AmountOfPadding = FieldLengthX - 14 /* 7 characters for "Lifes: " and 7 for "Score: " => 14 */ - PlayerLifes - Convert.ToString(Score).Length;
             Write(new string(' ', AmountOfPadding));
             ForegroundColor = Yellow;
             WriteLine($"Score: {Score}");           

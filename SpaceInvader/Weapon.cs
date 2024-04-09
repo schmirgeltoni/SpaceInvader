@@ -11,7 +11,9 @@ namespace SpaceInvader
         public int Ammo { get; set; }
         public int MaxAmmo { get; set; }
         public WeaponType Type { get; set; }
+        //toggle for minigun
         public bool Toggle { get; set; }
+        public int MiniGunRateOfFire { get; set; }
         public Weapon(WeaponType Type)
         {
             this.Type = Type;            
@@ -32,6 +34,7 @@ namespace SpaceInvader
                 MaxAmmo = 100;
                 Ammo = MaxAmmo;
                 Toggle = false;
+                MiniGunRateOfFire = 2;
             }
             else if (Type == WeaponType.Standard)
             {
