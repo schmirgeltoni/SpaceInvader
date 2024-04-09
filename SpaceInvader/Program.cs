@@ -1,7 +1,7 @@
 ﻿using static System.Console;
 using static System.ConsoleColor;
 
-namespace SpaceInvader //x und y sind vertauscht
+namespace SpaceInvader 
 {
 
     internal class Program
@@ -11,7 +11,6 @@ namespace SpaceInvader //x und y sind vertauscht
             CursorVisible = false;
 
             Display.DisplayTitleScreen(); 
-            //Thread.Sleep(3000); //3 Sekunden sleepen, damit nicht direkt nach dem TitleScreen etwas ausgewählt wird
             ClearKeyBuffer();
             
             Campaign Campaign = new(InitialiseCampaign());
@@ -23,6 +22,7 @@ namespace SpaceInvader //x und y sind vertauscht
             Clear();
             int SelectedOptionMainMenu = 0;
             MainMenu.PrintMenu(SelectedOptionMainMenu);
+            Thread.Sleep(500); //0,5 Sekunden sleepen, damit nicht direkt nach dem TitleScreen etwas ausgewählt wird
             while (true)
             {
                 if (KeyAvailable)
@@ -158,7 +158,7 @@ namespace SpaceInvader //x und y sind vertauscht
             {
                 if (Level.GameProgress > 325 && Level.SpawnEnemy)
                 {
-                    Level.Field[Level.EnemyLocationY, Level.PlayerLocationX] = new Enemy(Level.GameProgress);
+                    Level.Field[Level.EnemyLocationY, Level.PlayerLocationX] = new Enemy(Level.GameProgress, 0);
                     Level.SpawnEnemy = false;
                 }
                 ConsoleKey key;
@@ -242,7 +242,7 @@ namespace SpaceInvader //x und y sind vertauscht
                     key = ConsoleKey.End;
                 }
                 Level.RandomEnemySpawn();
-                Level.RandomMeteorSpawn(10);
+                Level.RandomMeteorSpawn(50);
                 Level.RandomUpgradeSpawn(500);
                 Level.LevelProgress(key);
 

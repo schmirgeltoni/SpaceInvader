@@ -28,16 +28,38 @@ namespace SpaceInvader
     }
     public class Enemy : Entity
     {
-        public int LifeTime { get; set; }
+        public int LifeTimeForHorizontalMovement { get; set; }
         public int LifeTimeForVerticalMovement { get; set; }
-        public Enemy(int GameProgress, char Icon, ConsoleColor Color) : base(Icon, Color, GameProgress) { }
-        public Enemy(int GameProgress, int LifeTimeForVerticalMovement) : base('V', Red, GameProgress) { LifeTime = 0; this.LifeTimeForVerticalMovement = LifeTimeForVerticalMovement; }
-        public Enemy(int GameProgress) : base('V', Red, GameProgress) { LifeTime = 0; LifeTimeForVerticalMovement = 0; }
-
+        public int LifeTimeForShooting { get; set; }
+        public Enemy(int GameProgress, char Icon, ConsoleColor Color, int LifeTimeForShooting) : base(Icon, Color, GameProgress) { }
+        public Enemy(int GameProgress, int LifeTimeForVerticalMovement, int LifeTimeForShooting) : base('V', Red, GameProgress) 
+        {
+            LifeTimeForHorizontalMovement = 0;
+            this.LifeTimeForVerticalMovement = LifeTimeForVerticalMovement;
+            this.LifeTimeForShooting = LifeTimeForShooting;
+        }
+        public Enemy(int GameProgress, int LifeTimeForShooting) : base('V', Red, GameProgress) 
+        { 
+            LifeTimeForHorizontalMovement = 0;
+            LifeTimeForVerticalMovement = 0;
+            this.LifeTimeForShooting = LifeTimeForShooting; 
+        }
     }
     public class Turret : Enemy
     {
-        public Turret(int GameProgress) : base(GameProgress,'U', Red) { }
+        public int ShotsFired { get; set; }
+        public int ShotsFiredBeforeMovement { get; set; }
+        public int AmountOfTilesToMove {  get; set; }
+        public int TilesMoved { get; set; }
+        public int Direction {  get; set; }
+        public Turret(int GameProgress, int ShotsFired, int AmountOfTilesToMove, int TilesMoved, int Direction) : base(GameProgress, 'U', Red, 0)
+        {
+            this.ShotsFired = ShotsFired;
+            ShotsFiredBeforeMovement = 25;
+            this.AmountOfTilesToMove = AmountOfTilesToMove;
+            this.TilesMoved = TilesMoved;
+            this.Direction = Direction;
+        }
     }
     public class FriendlyProjectile : Entity
     {        
@@ -93,21 +115,21 @@ namespace SpaceInvader
                 Icon = '░';           
         }
     }
-    public class DestructableMeteor : DestructableBarrier
+    public class DestructableMeteor : Entity
     {
-        public bool Move { get; set; }
+        public int LifeTime {  get; set; }
+        public int Health { get; set; }
 
-        public DestructableMeteor(int GameProgress, int Health) : base(GameProgress, Health)
+        public DestructableMeteor(int GameProgress, int Health) : base(Blue, GameProgress)
         {
             Icon = '*';
-            Color = Blue;
-            //this.Health = Health;
-            Move = false;
+            this.Health = Health;
         }
     }
     public class Meteor : Barrier
     {
         public bool Move { get; set; }
+        public int LifeTime { get; set; }
         public Meteor(int GameProgress) : base(GameProgress)
         {
             Icon = '*';
